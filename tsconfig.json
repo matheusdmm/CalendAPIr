@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "ES2022" /* Especifica a versão do ECMAScript para o código de saída. */,
+    "module": "NodeNext" /* Módulo para Node moderno (CommonJS, ES Modules). */,
+    "moduleResolution": "NodeNext" /* Estratégia de resolução de módulos. */,
+    "esModuleInterop": true /* Permite interoperabilidade com módulos CommonJS. */,
+    "strict": true /* Habilita todas as opções de checagem estrita de tipos. */,
+    "skipLibCheck": true /* Pula a checagem de tipos em arquivos de definição. */,
+    "outDir": "./dist" /* Diretório de saída para arquivos compilados. */,
+    "rootDir": "./src" /* Diretório raiz para arquivos-fonte. */
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules"]
+}

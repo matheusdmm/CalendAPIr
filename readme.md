@@ -24,12 +24,27 @@ Because the storage layer is DuckDB (an embedded OLAP database), you can run ana
 
 ---
 
+## Web UI
+
+CalendAPIr ships with a built-in single-page interface available at `http://localhost:3000` when the server is running. No separate frontend setup required.
+
+**Events tab** — lists all events ordered by date, with upcoming/past badges. Create, edit, and delete events through a modal form. Meeting links are clickable directly from the list.
+
+**Analytics tab** — shows a live summary (total events, upcoming count, this-week count, average duration, hours scheduled this week), a breakdown by day of week, and the five busiest days on record.
+
+**Import / Export tab** — drag and drop an `.ics` file to import events from Google Calendar, Outlook, Apple Calendar, or any app that exports iCalendar format. One-click export downloads all your events as `calendar.ics`.
+
+A stats bar at the top of every tab keeps key numbers visible at all times.
+
+---
+
 ## Stack
 
 - TypeScript (strict, ESM)
 - Node.js + Koa.js + @koa/router
 - DuckDB (file-based embedded database)
 - Zod (request validation)
+- Vanilla JS single-page UI (no build step, served by the API)
 
 ---
 

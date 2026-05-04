@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CalendAPIr</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f0f0f;
+      --surface: #1a1a1a;
+      --border: #2a2a2a;
+      --accent: #6c63ff;
+      --accent-hover: #7c74ff;
+      --danger: #e05252;
+      --text: #e8e8e8;
+      --muted: #888;
+      --green: #4caf82;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-size: 14px;
+      min-height: 100vh;
+    }
+
+    header {
+      padding: 18px 28px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--surface);
+    }
+
+    header h1 { font-size: 18px; font-weight: 600; letter-spacing: -0.3px; }
+    header span { color: var(--accent); }
+
+    .header-actions { display: flex; gap: 10px; }
+
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      padding: 7px 14px;
+      transition: background 0.15s;
+    }
+
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: var(--accent-hover); }
+
+    .btn-secondary { background: var(--border); color: var(--text); }
+    .btn-secondary:hover { background: #333; }
+
+    .btn-danger { background: transparent; color: var(--danger); border: 1px solid var(--danger); }
+    .btn-danger:hover { background: var(--danger); color: #fff; }
+
+    .btn-ghost { background: transparent; color: var(--muted); }
+    .btn-ghost:hover { color: var(--text); }
+
+    /* Stats */
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      padding: 20px 28px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 16px;
+    }
+
+    .stat-card .label { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+    .stat-card .value { font-size: 22px; font-weight: 700; }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 2px;
+      padding: 16px 28px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tab {
+      padding: 8px 16px;
+      background: transparent;
+      color: var(--muted);
+      border-radius: 6px 6px 0 0;
+      border: 1px solid transparent;
+      border-bottom: none;
+      font-size: 13px;
+    }
+
+    .tab.active {
+      background: var(--surface);
+      color: var(--text);
+      border-color: var(--border);
+      border-bottom: 1px solid var(--surface);
+      margin-bottom: -1px;
+    }
+
+    /* Main content */
+    .content { padding: 24px 28px; }
+
+    .view { display: none; }
+    .view.active { display: block; }
+
+    /* Event list */
+    .list-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .list-header h2 { font-size: 15px; font-weight: 600; }
+
+    .event-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .event-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 16px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .event-card:hover { border-color: #3a3a3a; }
+
+    .event-title { font-weight: 600; margin-bottom: 4px; }
+
+    .event-meta { color: var(--muted); font-size: 12px; display: flex; gap: 12px; flex-wrap: wrap; }
+
+    .event-actions { display: flex; gap: 6px; }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .badge-green { background: #1a3d2e; color: var(--green); }
+    .badge-muted { background: #222; color: var(--muted); }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+    }
+
+    /* Stats view */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .stats-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+    }
+
+    .stats-section h3 { font-size: 13px; color: var(--muted); margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    .stats-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+
+    .stats-row:last-child { border-bottom: none; }
+    .stats-row .val { font-weight: 600; }
+
+    /* Import/Export view */
+    .io-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+    .io-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 24px;
+    }
+
+    .io-card h3 { font-size: 15px; font-weight: 600; margin-bottom: 8px; }
+    .io-card p { color: var(--muted); font-size: 13px; margin-bottom: 20px; line-height: 1.5; }
+
+    .file-drop {
+      border: 2px dashed var(--border);
+      border-radius: 6px;
+      padding: 32px;
+      text-align: center;
+      color: var(--muted);
+      cursor: pointer;
+      transition: border-color 0.15s;
+      margin-bottom: 12px;
+    }
+
+    .file-drop:hover, .file-drop.over { border-color: var(--accent); color: var(--text); }
+
+    .file-drop input { display: none; }
+
+    /* Modal */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-backdrop.open { display: flex; }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 24px;
+      width: 100%;
+      max-width: 480px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .modal-header h2 { font-size: 16px; font-weight: 600; }
+
+    /* Form */
+    .form-group { margin-bottom: 14px; }
+
+    label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.4px; }
+
+    input, textarea {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      padding: 8px 10px;
+      font-size: 13px;
+      font-family: inherit;
+      transition: border-color 0.15s;
+    }
+
+    input:focus, textarea:focus { outline: none; border-color: var(--accent); }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    .form-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+
+    /* Toast */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 18px;
+      font-size: 13px;
+      z-index: 200;
+      transform: translateY(80px);
+      opacity: 0;
+      transition: all 0.25s ease;
+      max-width: 320px;
+    }
+
+    #toast.show { transform: translateY(0); opacity: 1; }
+    #toast.success { border-left: 3px solid var(--green); }
+    #toast.error { border-left: 3px solid var(--danger); }
+
+    @media (max-width: 640px) {
+      .stats-grid, .io-grid { grid-template-columns: 1fr; }
+      .stats-bar { grid-template-columns: repeat(2, 1fr); }
+      header { flex-direction: column; gap: 10px; align-items: flex-start; }
+      .content { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Calend<span>APIr</span></h1>
+  <div class="header-actions">
+    <button class="btn-secondary" onclick="exportICS()">Export ICS</button>
+    <button class="btn-primary" onclick="openCreate()">+ New Event</button>
+  </div>
+</header>
+
+<div class="stats-bar" id="statsBar">
+  <div class="stat-card"><div class="label">Total Events</div><div class="value" id="s-total">—</div></div>
+  <div class="stat-card"><div class="label">Upcoming</div><div class="value" id="s-upcoming">—</div></div>
+  <div class="stat-card"><div class="label">This Week</div><div class="value" id="s-week">—</div></div>
+  <div class="stat-card"><div class="label">Avg Duration</div><div class="value" id="s-avg">—</div></div>
+  <div class="stat-card"><div class="label">Hours This Week</div><div class="value" id="s-hours">—</div></div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('events', this)">Events</button>
+  <button class="tab" onclick="switchTab('stats', this)">Analytics</button>
+  <button class="tab" onclick="switchTab('io', this)">Import / Export</button>
+</div>
+
+<div class="content">
+
+  <!-- Events view -->
+  <div id="view-events" class="view active">
+    <div class="list-header">
+      <h2>All Events</h2>
+    </div>
+    <div class="event-list" id="eventList">
+      <div class="empty-state">Loading...</div>
+    </div>
+  </div>
+
+  <!-- Analytics view -->
+  <div id="view-stats" class="view">
+    <div class="stats-grid" id="statsGrid">
+      <div class="empty-state">Loading...</div>
+    </div>
+  </div>
+
+  <!-- Import / Export view -->
+  <div id="view-io" class="view">
+    <div class="io-grid">
+      <div class="io-card">
+        <h3>Import ICS</h3>
+        <p>Import events from a standard .ics file exported from Google Calendar, Outlook, Apple Calendar, or any other calendar app.</p>
+        <div class="file-drop" id="dropZone" onclick="document.getElementById('icsFile').click()">
+          <input type="file" id="icsFile" accept=".ics" onchange="handleFileSelect(this)" />
+          <div>Drop an .ics file here or click to browse</div>
+        </div>
+        <button class="btn-primary" style="width:100%" onclick="document.getElementById('icsFile').click()">Choose File</button>
+      </div>
+      <div class="io-card">
+        <h3>Export ICS</h3>
+        <p>Download all your events as a standard .ics file. You can import this into any calendar application that supports the iCalendar format.</p>
+        <button class="btn-primary" style="width:100%" onclick="exportICS()">Download calendar.ics</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Event modal -->
+<div class="modal-backdrop" id="eventModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modalTitle">New Event</h2>
+      <button class="btn-ghost" onclick="closeModal()">✕</button>
+    </div>
+    <form id="eventForm" onsubmit="submitEvent(event)">
+      <input type="hidden" id="editId" />
+      <div class="form-group">
+        <label>Title *</label>
+        <input type="text" id="f-title" required minlength="3" maxlength="100" placeholder="e.g. Team Standup" />
+      </div>
+      <div class="form-group">
+        <label>Date *</label>
+        <input type="date" id="f-date" required />
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Start Time *</label>
+          <input type="time" id="f-startTime" required />
+        </div>
+        <div class="form-group">
+          <label>End Time *</label>
+          <input type="time" id="f-endTime" required />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea id="f-description" rows="3" maxlength="500" placeholder="Optional notes..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>Meeting Link</label>
+        <input type="url" id="f-meetingLink" placeholder="https://..." />
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn-primary" id="submitBtn">Create</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+  const API = '/api/v1/calendar';
+  let allEvents = [];
+
+  // ── Tabs ──────────────────────────────────────────────────────────────────
+  function switchTab(name, el) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('view-' + name).classList.add('active');
+    if (name === 'stats') renderStats();
+  }
+
+  // ── Toast ─────────────────────────────────────────────────────────────────
+  let toastTimer;
+  function toast(msg, type = 'success') {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = 'show ' + type;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.className = '', 3000);
+  }
+
+  // ── Stats bar ─────────────────────────────────────────────────────────────
+  async function loadStatsBar() {
+    try {
+      const res = await fetch(`${API}/stats`);
+      const s = await res.json();
+      document.getElementById('s-total').textContent = s.totalEvents ?? '—';
+      document.getElementById('s-upcoming').textContent = s.upcomingEvents ?? '—';
+      document.getElementById('s-week').textContent = s.eventsThisWeek ?? '—';
+      document.getElementById('s-avg').textContent = s.avgDurationMinutes != null ? s.avgDurationMinutes + ' min' : '—';
+      document.getElementById('s-hours').textContent = s.hoursThisWeek != null ? s.hoursThisWeek + ' h' : '—';
+      return s;
+    } catch { return null; }
+  }
+
+  // ── Events ────────────────────────────────────────────────────────────────
+  async function loadEvents() {
+    try {
+      const res = await fetch(`${API}/events`);
+      const data = await res.json();
+      allEvents = data.data || [];
+      renderEvents();
+    } catch {
+      document.getElementById('eventList').innerHTML = '<div class="empty-state">Could not load events.</div>';
+    }
+  }
+
+  function renderEvents() {
+    const list = document.getElementById('eventList');
+    if (!allEvents.length) {
+      list.innerHTML = '<div class="empty-state">No events yet. Create your first one.</div>';
+      return;
+    }
+    list.innerHTML = allEvents.map(e => {
+      const isUpcoming = e.date >= new Date().toISOString().slice(0, 10);
+      const badge = isUpcoming
+        ? `<span class="badge badge-green">Upcoming</span>`
+        : `<span class="badge badge-muted">Past</span>`;
+      const link = e.meetingLink ? `<a href="${e.meetingLink}" target="_blank" style="color:var(--accent)">Join</a>` : '';
+      return `
+        <div class="event-card">
+          <div>
+            <div class="event-title">${esc(e.title)} ${badge}</div>
+            <div class="event-meta">
+              <span>${e.date}</span>
+              <span>${e.startTime} – ${e.endTime}</span>
+              ${e.description ? `<span>${esc(e.description.slice(0, 60))}${e.description.length > 60 ? '…' : ''}</span>` : ''}
+              ${link}
+            </div>
+          </div>
+          <div class="event-actions">
+            <button class="btn-secondary" onclick="openEdit(${JSON.stringify(e).replace(/"/g, '&quot;')})">Edit</button>
+            <button class="btn-danger" onclick="deleteEvent('${e.id}')">Delete</button>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function esc(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  async function deleteEvent(id) {
+    if (!confirm('Delete this event?')) return;
+    const res = await fetch(`${API}/events/${id}`, { method: 'DELETE' });
+    if (res.ok) {
+      toast('Event deleted.');
+      allEvents = allEvents.filter(e => e.id !== id);
+      renderEvents();
+      loadStatsBar();
+    } else {
+      toast('Failed to delete event.', 'error');
+    }
+  }
+
+  // ── Modal ─────────────────────────────────────────────────────────────────
+  function openCreate() {
+    document.getElementById('modalTitle').textContent = 'New Event';
+    document.getElementById('submitBtn').textContent = 'Create';
+    document.getElementById('editId').value = '';
+    document.getElementById('eventForm').reset();
+    document.getElementById('f-date').value = new Date().toISOString().slice(0, 10);
+    document.getElementById('eventModal').classList.add('open');
+  }
+
+  function openEdit(event) {
+    document.getElementById('modalTitle').textContent = 'Edit Event';
+    document.getElementById('submitBtn').textContent = 'Save';
+    document.getElementById('editId').value = event.id;
+    document.getElementById('f-title').value = event.title;
+    document.getElementById('f-date').value = event.date;
+    document.getElementById('f-startTime').value = event.startTime;
+    document.getElementById('f-endTime').value = event.endTime;
+    document.getElementById('f-description').value = event.description || '';
+    document.getElementById('f-meetingLink').value = event.meetingLink || '';
+    document.getElementById('eventModal').classList.add('open');
+  }
+
+  function closeModal() {
+    document.getElementById('eventModal').classList.remove('open');
+  }
+
+  document.getElementById('eventModal').addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) closeModal();
+  });
+
+  async function submitEvent(e) {
+    e.preventDefault();
+    const id = document.getElementById('editId').value;
+    const body = {
+      title: document.getElementById('f-title').value,
+      date: document.getElementById('f-date').value,
+      startTime: document.getElementById('f-startTime').value,
+      endTime: document.getElementById('f-endTime').value,
+      description: document.getElementById('f-description').value || undefined,
+      meetingLink: document.getElementById('f-meetingLink').value || undefined,
+    };
+
+    const url = id ? `${API}/events/${id}` : `${API}/events`;
+    const method = id ? 'PUT' : 'POST';
+
+    const res = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+
+    const data = await res.json();
+    if (res.ok) {
+      toast(id ? 'Event updated.' : 'Event created.');
+      closeModal();
+      loadEvents();
+      loadStatsBar();
+    } else {
+      toast(data.error || 'Something went wrong.', 'error');
+    }
+  }
+
+  // ── Analytics view ────────────────────────────────────────────────────────
+  async function renderStats() {
+    const grid = document.getElementById('statsGrid');
+    grid.innerHTML = '<div class="empty-state">Loading...</div>';
+    try {
+      const res = await fetch(`${API}/stats`);
+      const s = await res.json();
+
+      const dayRows = (s.eventsByDayOfWeek || [])
+        .map(d => `<div class="stats-row"><span>${d.day}</span><span class="val">${d.count}</span></div>`)
+        .join('') || '<div class="stats-row"><span>No data</span></div>';
+
+      const busyRows = (s.busiestDays || [])
+        .map(d => `<div class="stats-row"><span>${d.date}</span><span class="val">${d.count} events</span></div>`)
+        .join('') || '<div class="stats-row"><span>No data</span></div>';
+
+      grid.innerHTML = `
+        <div class="stats-section">
+          <h3>Summary</h3>
+          <div class="stats-row"><span>Total Events</span><span class="val">${s.totalEvents ?? '—'}</span></div>
+          <div class="stats-row"><span>Upcoming</span><span class="val">${s.upcomingEvents ?? '—'}</span></div>
+          <div class="stats-row"><span>This Week</span><span class="val">${s.eventsThisWeek ?? '—'}</span></div>
+          <div class="stats-row"><span>Avg Duration</span><span class="val">${s.avgDurationMinutes != null ? s.avgDurationMinutes + ' min' : '—'}</span></div>
+          <div class="stats-row"><span>Hours This Week</span><span class="val">${s.hoursThisWeek != null ? s.hoursThisWeek + ' h' : '—'}</span></div>
+        </div>
+        <div class="stats-section">
+          <h3>Events by Day of Week</h3>
+          ${dayRows}
+        </div>
+        <div class="stats-section" style="grid-column: 1 / -1">
+          <h3>Top 5 Busiest Days</h3>
+          ${busyRows}
+        </div>`;
+    } catch {
+      grid.innerHTML = '<div class="empty-state">Could not load analytics.</div>';
+    }
+  }
+
+  // ── Import / Export ───────────────────────────────────────────────────────
+  async function handleFileSelect(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const text = await file.text();
+    const res = await fetch(`${API}/events/import`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/calendar' },
+      body: text,
+    });
+    const data = await res.json();
+    if (res.ok) {
+      toast(data.message || 'Imported successfully.');
+      loadEvents();
+      loadStatsBar();
+    } else {
+      toast(data.error || 'Import failed.', 'error');
+    }
+    input.value = '';
+  }
+
+  async function exportICS() {
+    const a = document.createElement('a');
+    a.href = `${API}/events/export`;
+    a.download = 'calendar.ics';
+    a.click();
+  }
+
+  // Drag-and-drop for import
+  const dropZone = document.getElementById('dropZone');
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('over'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('over'));
+  dropZone.addEventListener('drop', async e => {
+    e.preventDefault();
+    dropZone.classList.remove('over');
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      document.getElementById('icsFile').files = e.dataTransfer.files;
+      await handleFileSelect({ files: e.dataTransfer.files, value: '' });
+    }
+  });
+
+  // ── Init ──────────────────────────────────────────────────────────────────
+  loadEvents();
+  loadStatsBar();
+</script>
+</body>
+</html>

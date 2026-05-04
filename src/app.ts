@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import Koa from 'koa';
 import bodyParser from 'koa-bodyparser';
 import calendarRouter from './routes/calendarRouter.js';
@@ -9,11 +10,14 @@ const startServer = async () => {
 
     const app = new Koa();
 
-    app.use(bodyParser());
+    app.use(bodyParser({
+      enableTypes: ['json', 'text'],
+      extendTypes: { text: ['text/calendar'] },
+    }));
 
     app.use(calendarRouter.routes()).use(calendarRouter.allowedMethods());
 
-    const PORT = 3000;
+    const PORT = Number(process.env.PORT) || 3000;
     app.listen(PORT, () => {
       console.log(`🚀 API @ http://localhost:${PORT}/api/v1/calendar/`);
     });
